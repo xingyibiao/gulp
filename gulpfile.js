@@ -2,7 +2,7 @@
 * @Author: xingyibiao
 * @Date:   2017-06-09 11:15:41
 * @Last Modified by:   xingyibiao
-* @Last Modified time: 2017-06-13 11:13:22
+* @Last Modified time: 2017-08-18 08:55:33
 */
 var browserSync = require('browser-sync').create(),
     gulp = require('gulp'),
@@ -19,22 +19,23 @@ var browserSync = require('browser-sync').create(),
     del = require('del'),
     notify = require('gulp-notify');
 
-const APIURL = 'http://192.168.120.92';
+const APIURL = 'http://192.168.120.200';
 const ISPROXY = true;
+const sourceBaseDir = 'src/salesActivity/';
 
 gulp.task('sass', function() {
-    return gulp.src('src/setCompensation/scss/*.scss')
+    return gulp.src(sourceBaseDir + 'scss/*.scss')
         .pipe(sourcemaps.init())
         .pipe(sass())
         .pipe(autoprefixer('last 2 version', 'safari 5', 'ie 8', 'ie 9', 'opera 12.1', 'ios 6', 'android 4'))
         .pipe(rename({suffix: '.min'}))
         .pipe(minifycss())
         .pipe(sourcemaps.write())
-        .pipe(gulp.dest('src/setCompensation/css'))
+        .pipe(gulp.dest(sourceBaseDir + 'css'))
         .pipe(notify({ message: 'Styles task complete' }))
         .pipe(browserSync.stream());
 });
-gulp.task('server',['sass','imagemin'], function() {
+gulp.task('server', function() {
     const aipProxy = proxy('/hyzx', {
         target: APIURL,
         changeOrigin: true,
@@ -59,12 +60,12 @@ gulp.task('server',['sass','imagemin'], function() {
 });
 
 gulp.task('js', function () {
-    return gulp.src('src/setCompensation/js/*.js')
+    return gulp.src(sourceBaseDir + 'js/*.js')
         //.pipe(concat('main.js'))
         //.pipe(gulp.dest('dist/js/'))
         .pipe(rename({suffix:'.min'}))
         .pipe(uglify())
-        .pipe(gulp.dest('src/setCompensation/minjs/'))
+        .pipe(gulp.dest(sourceBaseDir + 'minjs/'))
         //.pipe(uglify())
         //.pipe(gulp.dest('dist/js'))
         //.pipe(browserSync.stream());;
@@ -72,12 +73,12 @@ gulp.task('js', function () {
 });
 
 gulp.task('imagemin',function(){
-    gulp.src(['src/**/*.jpg','src/**/*.png'])
+    gulp.src([sourceBaseDir + '**/*.jpg',sourceBaseDir + '**/*.png'])
         .pipe(imagemin())
         .pipe(gulp.dest('dist/image'))
 })
-gulp.task('dev',['server','js'],function(){
-    gulp.watch('src/**/*.html',browserSync.reload)
-    gulp.watch("src/**/scss/*.scss", ['sass'])
-    gulp.watch('src/**/js/*.js',['js'])
+gulp.task('dev',['sass','server'],function(){
+    gulp.watch(sourceBaseDir + '*.html',browserSync.reload)
+    gulp.watch(sourceBaseDir + "scss/*.scss",['sass'])
+    gulp.watch(sourceBaseDir + 'js/*.js',browserSync.reload)
 })
