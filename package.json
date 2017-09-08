@@ -14,6 +14,7 @@
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^4.0.0",
     "gulp-concat": "^2.6.1",
+    "gulp-eslint": "^4.0.0",
     "gulp-imagemin": "^3.3.0",
     "gulp-minify-css": "^1.2.4",
     "gulp-notify": "^3.0.0",
@@ -31,5 +32,9 @@
     "http-proxy-middleware": "^0.17.4",
     "browser-sync": "^2.18.12"
   },
-  "description": ""
+  "description": "",
+  "eslintIgnore": [
+    "src/**/node_modules",
+    "node_modules"
+  ]
 }
