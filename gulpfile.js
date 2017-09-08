@@ -1,8 +1,8 @@
 /*
 * @Author: xingyibiao
 * @Date:   2017-06-09 11:15:41
-* @Last Modified by:   xingyibiao
-* @Last Modified time: 2017-08-18 08:55:33
+ * @Last Modified by: xingyibiao
+ * @Last Modified time: 2017-09-08 11:12:20
 */
 var browserSync = require('browser-sync').create(),
     gulp = require('gulp'),
@@ -21,7 +21,7 @@ var browserSync = require('browser-sync').create(),
 
 const APIURL = 'http://192.168.120.200';
 const ISPROXY = true;
-const sourceBaseDir = 'src/salesActivity/';
+const sourceBaseDir = 'src/dataSource/';
 
 gulp.task('sass', function() {
     return gulp.src(sourceBaseDir + 'scss/*.scss')
@@ -72,13 +72,59 @@ gulp.task('js', function () {
         .pipe(browserSync.stream());
 });
 
-gulp.task('imagemin',function(){
-    gulp.src([sourceBaseDir + '**/*.jpg',sourceBaseDir + '**/*.png'])
-        .pipe(imagemin())
-        .pipe(gulp.dest('dist/image'))
-})
-gulp.task('dev',['sass','server'],function(){
-    gulp.watch(sourceBaseDir + '*.html',browserSync.reload)
-    gulp.watch(sourceBaseDir + "scss/*.scss",['sass'])
-    gulp.watch(sourceBaseDir + 'js/*.js',browserSync.reload)
-})
+// 生产环境 -> 编译并压缩scss
+gulp.task("buildSass", function() {
+    return gulp
+      .src(sourceBaseDir + "scss/*.scss")
+      .pipe(sass())
+      .pipe(
+        autoprefixer(
+          "last 2 version",
+          "safari 5",
+          "ie 8",
+          "ie 9",
+          "opera 12.1",
+          "ios 6",
+          "android 4"
+        )
+      )
+      .pipe(rename({ suffix: ".min" }))
+      .pipe(minifycss())
+      .pipe(gulp.dest(sourceBaseDir + "dist/css"));
+  });
+  
+  // 压缩Js
+  gulp.task("minjs", function() {
+    return (gulp
+        .src(sourceBaseDir + "js/*.js")
+        // .pipe(concat('main.js'))
+        // .pipe(gulp.dest(sourceBaseDir + 'dist/js'))
+        .pipe(rename({ suffix: ".min" }))
+        .pipe(uglify())
+        .pipe(gulp.dest(sourceBaseDir + "dist/js/")) );
+  });
+  
+  // 压缩图片
+  gulp.task("imagemin", function() {
+    gulp
+      .src([sourceBaseDir + "**/*.jpg", sourceBaseDir + "**/*.png"])
+      .pipe(imagemin())
+      .pipe(gulp.dest("dist/image"));
+  });
+  
+  // 清空dist文件夹
+  gulp.task("clean", function() {
+    del([sourceBaseDir + "dist"]);
+  });
+  
+  // 开发环境
+  gulp.task("dev", ["sass", "server"], function() {
+    gulp.watch(sourceBaseDir + "*.html", browserSync.reload);
+    gulp.watch(sourceBaseDir + "scss/*.scss", ["sass"]);
+    gulp.watch(sourceBaseDir + "js/*.js", browserSync.reload);
+  });
+  
+  // 生产环境 -> 压缩打包
+  gulp.task("build", ["clean", "buildSass", "minjs"], function() {
+    console.log("completa");
+  });
