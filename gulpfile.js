@@ -2,7 +2,7 @@
 * @Author: xingyibiao
 * @Date:   2017-06-09 11:15:41
  * @Last Modified by: xingyibiao
- * @Last Modified time: 2017-09-08 15:51:15
+ * @Last Modified time: 2017-09-08 16:49:40
 */
 var browserSync = require('browser-sync').create(),
   gulp = require('gulp'),
@@ -20,9 +20,9 @@ var browserSync = require('browser-sync').create(),
   del = require('del'),
   notify = require('gulp-notify')
 
-const APIURL = 'http://192.168.120.200'
+const APIURL = 'http://192.168.60.236:8080'
 const ISPROXY = true
-const sourceBaseDir = 'src/pointsSummary/'
+const sourceBaseDir = 'src/makerMap/'
 
 gulp.task('sass', function() {
   return gulp
