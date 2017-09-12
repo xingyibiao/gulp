@@ -10,6 +10,7 @@
   "devDependencies": {
     "browser-sync": "^2.18.12",
     "browserify": "^14.4.0",
+    "browserify-shim": "^3.8.14",
     "del": "^2.2.2",
     "eslint-config-standard": "^10.2.1",
     "eslint-plugin-import": "^2.7.0",
@@ -18,6 +19,7 @@
     "eslint-plugin-standard": "^3.0.1",
     "gulp": "^3.9.1",
     "gulp-autoprefixer": "^4.0.0",
+    "gulp-browserify": "^0.5.1",
     "gulp-concat": "^2.6.1",
     "gulp-eslint": "^4.0.0",
     "gulp-imagemin": "^3.3.0",
@@ -32,10 +34,11 @@
     "node-sass": "^4.5.3"
   },
   "dependencies": {
+    "browser-sync": "^2.18.12",
     "gulp": "^3.9.1",
-    "immutable": "^3.8.1",
     "http-proxy-middleware": "^0.17.4",
-    "browser-sync": "^2.18.12"
+    "immutable": "^3.8.1",
+    "jquery": "^3.2.1"
   },
   "description": "",
   "eslintIgnore": [

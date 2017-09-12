@@ -2,7 +2,7 @@
 * @Author: xingyibiao
 * @Date:   2017-06-09 11:15:41
  * @Last Modified by: xingyibiao
- * @Last Modified time: 2017-09-08 16:49:40
+ * @Last Modified time: 2017-09-12 15:54:19
 */
 var browserSync = require('browser-sync').create(),
   gulp = require('gulp'),
@@ -14,15 +14,16 @@ var browserSync = require('browser-sync').create(),
   rename = require('gulp-rename'),
   imagemin = require('gulp-imagemin'),
   eslint = require('gulp-eslint'),
-  browserify = require('browserify'),
+  browserify = require('gulp-browserify'),
   uglify = require('gulp-uglify'),
   concat = require('gulp-concat'),
   del = require('del'),
   notify = require('gulp-notify')
 
-const APIURL = 'http://192.168.60.236:8080'
+const APIURL = 'http://192.168.120.250:3000'
 const ISPROXY = true
-const sourceBaseDir = 'src/makerMap/'
+const sourceBaseDir = 'src/customerExchange/'
+const entriesName = 'customerExchange'
 
 gulp.task('sass', function() {
   return gulp
@@ -71,8 +72,8 @@ gulp.task('server', function() {
   }
 })
 
-// eslint
 
+// eslint
 gulp.task('lint', function() {
   return gulp
     .src(sourceBaseDir + 'js/*.js')
@@ -84,8 +85,26 @@ gulp.task('lint', function() {
 gulp.task('js', ['lint'], function() {
   return (gulp
     .src(sourceBaseDir + 'js/*.js')
-  //.pipe(concat('main.js'))
-  //.pipe(gulp.dest('dist/js/'))
+    .pipe(browserify({
+      insertGlobals:true,
+      debug:true,
+      shim: {
+        'jqPaginator': {
+          path: './src/jqPaginator/dist/js/jqPaginator.min',
+          exports: 'jqPaginator',
+          depends: {
+            jquery: 'jQuery'
+          }
+        },
+        'jedate': {
+          path: './src/customerExchange/assets/jquery.jedate.min',
+          exports: 'jeDate',
+          depends: {
+            jquery: 'jQuery'
+          }
+        }
+      }
+    }))
     .pipe(rename({ suffix: '.min' }))
     .pipe(uglify())
     .pipe(gulp.dest(sourceBaseDir + 'minjs/'))
