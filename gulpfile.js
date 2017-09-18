@@ -2,7 +2,7 @@
 * @Author: xingyibiao
 * @Date:   2017-06-09 11:15:41
  * @Last Modified by: xingyibiao
- * @Last Modified time: 2017-09-12 15:54:19
+ * @Last Modified time: 2017-09-18 16:59:17
 */
 var browserSync = require('browser-sync').create(),
   gulp = require('gulp'),
@@ -18,14 +18,17 @@ var browserSync = require('browser-sync').create(),
   uglify = require('gulp-uglify'),
   concat = require('gulp-concat'),
   del = require('del'),
-  notify = require('gulp-notify')
+  notify = require('gulp-notify'),
+  rev = require('gulp-rev'),
+  revCollector = require('gulp-rev-collector'),
+  runSequence = require('run-sequence')
 
-const APIURL = 'http://192.168.120.250:3000'
-const ISPROXY = true
-const sourceBaseDir = 'src/customerExchange/'
-const entriesName = 'customerExchange'
+const APIURL = 'http://192.168.120.190:8080',
+  ISPROXY = true,
+  sourceBaseDir = 'src/productExchange/',
+  entriesName = 'productExchange'
 
-gulp.task('sass', function() {
+gulp.task('sass', function () {
   return gulp
     .src(sourceBaseDir + 'scss/*.scss')
     .pipe(sourcemaps.init())
@@ -48,8 +51,8 @@ gulp.task('sass', function() {
     .pipe(notify({ message: 'Styles task complete' }))
     .pipe(browserSync.stream())
 })
-gulp.task('server', function() {
-  const aipProxy = proxy('/hyzx', {
+gulp.task('server', function () {
+  const aipProxy = proxy('/ProductDetail', {
     target: APIURL,
     changeOrigin: true,
     ws: true
@@ -72,9 +75,8 @@ gulp.task('server', function() {
   }
 })
 
-
 // eslint
-gulp.task('lint', function() {
+gulp.task('lint', function () {
   return gulp
     .src(sourceBaseDir + 'js/*.js')
     .pipe(eslint())
@@ -82,40 +84,39 @@ gulp.task('lint', function() {
     .pipe(eslint.failAfterError())
 })
 
-gulp.task('js', ['lint'], function() {
+gulp.task('js', ['lint'], function () {
   return (gulp
     .src(sourceBaseDir + 'js/*.js')
-    .pipe(browserify({
-      insertGlobals:true,
-      debug:true,
-      shim: {
-        'jqPaginator': {
-          path: './src/jqPaginator/dist/js/jqPaginator.min',
-          exports: 'jqPaginator',
-          depends: {
-            jquery: 'jQuery'
-          }
-        },
-        'jedate': {
-          path: './src/customerExchange/assets/jquery.jedate.min',
-          exports: 'jeDate',
-          depends: {
-            jquery: 'jQuery'
+    .pipe(
+      browserify({
+        insertGlobals: true,
+        debug: true,
+        shim: {
+          jqPaginator: {
+            path: './src/jqPaginator/dist/js/jqPaginator.min',
+            exports: 'jqPaginator',
+            depends: {
+              jquery: 'jQuery'
+            }
+          },
+          jedate: {
+            path: './src/customerExchange/assets/jquery.jedate.min',
+            exports: 'jeDate',
+            depends: {
+              jquery: 'jQuery'
+            }
           }
         }
-      }
-    }))
+      })
+    )
     .pipe(rename({ suffix: '.min' }))
     .pipe(uglify())
-    .pipe(gulp.dest(sourceBaseDir + 'minjs/'))
-  //.pipe(uglify())
-  //.pipe(gulp.dest('dist/js'))
-  //.pipe(browserSync.stream());;
-    .pipe(browserSync.stream()) )
+    .pipe(gulp.dest(sourceBaseDir + 'minjs'))
+    .pipe(browserSync.stream()))
 })
 
 // 生产环境 -> 编译并压缩scss
-gulp.task('buildSass', function() {
+gulp.task('buildSass', function () {
   return gulp
     .src(sourceBaseDir + 'scss/*.scss')
     .pipe(sass())
@@ -136,18 +137,16 @@ gulp.task('buildSass', function() {
 })
 
 // 压缩Js
-gulp.task('minjs', function() {
+gulp.task('minjs', function () {
   return (gulp
     .src(sourceBaseDir + 'js/*.js')
-  // .pipe(concat('main.js'))
-  // .pipe(gulp.dest(sourceBaseDir + 'dist/js'))
     .pipe(rename({ suffix: '.min' }))
     .pipe(uglify())
-    .pipe(gulp.dest(sourceBaseDir + 'dist/js/')) )
+    .pipe(gulp.dest(sourceBaseDir + 'dist/minjs/')))
 })
 
 // 压缩图片
-gulp.task('imagemin', function() {
+gulp.task('imagemin', function () {
   gulp
     .src([sourceBaseDir + '**/*.jpg', sourceBaseDir + '**/*.png'])
     .pipe(imagemin())
@@ -155,18 +154,60 @@ gulp.task('imagemin', function() {
 })
 
 // 清空dist文件夹
-gulp.task('clean', function() {
+gulp.task('clean', function () {
   del([sourceBaseDir + 'dist'])
 })
 
+// css md5
+gulp.task('md5css', function () {
+  return gulp.src(sourceBaseDir + 'dist/css/' + entriesName + '.min.css')
+    .pipe(rev())
+    .pipe(gulp.dest(sourceBaseDir + 'dist/css'))
+    .pipe(rev.manifest())
+    .pipe(gulp.dest(sourceBaseDir + 'dist/css'))
+})
+
+// js md5
+gulp.task('md5js', function () {
+  return gulp.src(sourceBaseDir + 'dist/minjs/*.js')
+    .pipe(rev())
+    .pipe(gulp.dest(sourceBaseDir + 'dist/minjs'))
+    .pipe(rev.manifest())
+    .pipe(gulp.dest(sourceBaseDir + 'dist/minjs'))
+})
+
+// html 替换css版本
+gulp.task('revHtmlcss', function () {
+  return gulp.src([sourceBaseDir + 'dist/css/*.json', sourceBaseDir + '*.html'])
+    .pipe(gulp.dest(sourceBaseDir + 'dist'))
+    .pipe(revCollector())
+    .pipe(gulp.dest(sourceBaseDir + 'dist'))
+})
+
+// html 替换css版本
+gulp.task('revHtmljs', function () {
+  return gulp.src([sourceBaseDir + 'dist/minjs/*.json', sourceBaseDir + 'dist/*.html'])
+    .pipe(revCollector())
+    .pipe(gulp.dest(sourceBaseDir + 'dist'))
+})
+
 // 开发环境
-gulp.task('dev', ['sass', 'server'], function() {
+gulp.task('dev', ['sass', 'server'], function () {
   gulp.watch(sourceBaseDir + '*.html', browserSync.reload)
   gulp.watch(sourceBaseDir + 'scss/*.scss', ['sass'])
   gulp.watch(sourceBaseDir + 'js/*.js', ['js'], browserSync.reload)
 })
 
 // 生产环境 -> 压缩打包
-gulp.task('build', ['clean', 'buildSass', 'minjs'], function() {
+gulp.task('build', function (done) {
+  runSequence(
+    ['clean'],
+    ['buildSass'],
+    ['md5css'],
+    ['revHtmlcss'],
+    ['minjs'],
+    ['md5js'],
+    ['revHtmljs'],
+    done)
   console.log('completa')
 })
