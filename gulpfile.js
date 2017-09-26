@@ -2,7 +2,7 @@
 * @Author: xingyibiao
 * @Date:   2017-06-09 11:15:41
  * @Last Modified by: xingyibiao
- * @Last Modified time: 2017-09-18 16:59:17
+ * @Last Modified time: 2017-09-26 16:04:56
 */
 var browserSync = require('browser-sync').create(),
   gulp = require('gulp'),
@@ -16,6 +16,7 @@ var browserSync = require('browser-sync').create(),
   eslint = require('gulp-eslint'),
   browserify = require('gulp-browserify'),
   uglify = require('gulp-uglify'),
+  spritesmith = require('gulp.spritesmith'),
   concat = require('gulp-concat'),
   del = require('del'),
   notify = require('gulp-notify'),
@@ -53,10 +54,15 @@ gulp.task('sass', function () {
 })
 gulp.task('server', function () {
   const aipProxy = proxy('/ProductDetail', {
-    target: APIURL,
-    changeOrigin: true,
-    ws: true
-  })
+      target: APIURL,
+      changeOrigin: true,
+      ws: true
+    }),
+    aipProxy2 = proxy('/ProducTotal', {
+      target: APIURL,
+      changeOrigin: true,
+      ws: true
+    })
 
   if (!ISPROXY) {
     browserSync.init({
@@ -69,7 +75,7 @@ gulp.task('server', function () {
     browserSync.init({
       server: {
         baseDir: 'src',
-        middleware: [aipProxy]
+        middleware: [aipProxy, aipProxy2]
       }
     })
   }
@@ -139,8 +145,7 @@ gulp.task('buildSass', function () {
 // 压缩Js
 gulp.task('minjs', function () {
   return (gulp
-    .src(sourceBaseDir + 'js/*.js')
-    .pipe(rename({ suffix: '.min' }))
+    .src(sourceBaseDir + 'minjs/*.js')
     .pipe(uglify())
     .pipe(gulp.dest(sourceBaseDir + 'dist/minjs/')))
 })
@@ -190,6 +195,18 @@ gulp.task('revHtmljs', function () {
     .pipe(revCollector())
     .pipe(gulp.dest(sourceBaseDir + 'dist'))
 })
+
+// sprite
+gulp.task('sprite', function () {  
+  gulp.src('src/sprite/img/*.png')
+    .pipe(spritesmith({
+      imgName: 'sprite.png',
+      cssName: 'css/sprite.css',
+      padding: 5,
+      algorithm: 'binary-tree'
+    }))
+    .pipe(gulp.dest('dist/sprite/'))
+}) 
 
 // 开发环境
 gulp.task('dev', ['sass', 'server'], function () {
