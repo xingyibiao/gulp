@@ -2,7 +2,7 @@
 * @Author: xingyibiao
 * @Date:   2017-06-09 11:15:41
  * @Last Modified by: xingyibiao
- * @Last Modified time: 2017-09-26 16:04:56
+ * @Last Modified time: 2017-11-14 11:21:26
 */
 var browserSync = require('browser-sync').create(),
   gulp = require('gulp'),
@@ -22,12 +22,13 @@ var browserSync = require('browser-sync').create(),
   notify = require('gulp-notify'),
   rev = require('gulp-rev'),
   revCollector = require('gulp-rev-collector'),
-  runSequence = require('run-sequence')
+  runSequence = require('run-sequence'),
+  babel = require('gulp-babel')
 
-const APIURL = 'http://192.168.120.190:8080',
+const APIURL = 'http://127.0.0.0/',
   ISPROXY = true,
-  sourceBaseDir = 'src/productExchange/',
-  entriesName = 'productExchange'
+  sourceBaseDir = 'src/TradingOrders/customer/',
+  entriesName = 'customer'
 
 gulp.task('sass', function () {
   return gulp
@@ -53,7 +54,7 @@ gulp.task('sass', function () {
     .pipe(browserSync.stream())
 })
 gulp.task('server', function () {
-  const aipProxy = proxy('/ProductDetail', {
+  const aipProxy = proxy('/hyzx', {
       target: APIURL,
       changeOrigin: true,
       ws: true
@@ -93,6 +94,7 @@ gulp.task('lint', function () {
 gulp.task('js', ['lint'], function () {
   return (gulp
     .src(sourceBaseDir + 'js/*.js')
+    .pipe(babel())
     .pipe(
       browserify({
         insertGlobals: true,
@@ -197,7 +199,7 @@ gulp.task('revHtmljs', function () {
 })
 
 // sprite
-gulp.task('sprite', function () {  
+gulp.task('sprite', function () {
   gulp.src('src/sprite/img/*.png')
     .pipe(spritesmith({
       imgName: 'sprite.png',
@@ -206,7 +208,7 @@ gulp.task('sprite', function () {
       algorithm: 'binary-tree'
     }))
     .pipe(gulp.dest('dist/sprite/'))
-}) 
+})
 
 // 开发环境
 gulp.task('dev', ['sass', 'server'], function () {
